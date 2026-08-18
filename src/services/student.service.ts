@@ -1,20 +1,53 @@
-import { inputFunction } from "../utils/readline.ts";
+import fs from "fs/promises";
 import {
-  Students,
+  type Students,
+  oldStudentsData,
   StudentModel,
-  oldStudentModel,
-} from "../src/models/student.models.ts";
-import { validateData } from "../utils/validation.ts";
+} from "../models/students.ts";
+import { inputFunction } from "../utils/readline.ts";
+
+import {
+  validateId,
+  validateName,
+  validateEmail,
+  validateAge,
+  validateCourse,
+  validateMarks,
+} from "../utils/validation.ts";
 
 export const addStudent = async () => {
   const name: string = await inputFunction("Name:");
-  const email: string = await inputFunction("Email:");
-  const age: number = Number(await inputFunction("Age:"));
-  const course: string = await inputFunction("Course Name:");
-  const marks: number = Number(await inputFunction("Marks:"));
+  const nameValidation = validateName(name);
+  if (!nameValidation.check) {
+    return { message: nameValidation.message };
+  }
 
-  const userData = { name, email, age, course, marks };
-  const validatedData = validateData(userData);
+  const email: string = await inputFunction("Email:");
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.check) {
+    return { message: emailValidation.message };
+  }
+
+  const age: number = Number(await inputFunction("Age:"));
+  const ageValidation = validateAge(age);
+  if (!ageValidation.check) {
+    return { message: ageValidation.message };
+  }
+
+  let course: string = await inputFunction(
+    "Courses:\n1. OS, 2. OOP, 3. CN, 4. WEB, 5. DBMS, 6. DSA:\nChoose one of the Courses above:",
+  );
+  course = course.toUpperCase();
+  const courseValidation = validateCourse(course);
+  if (!courseValidation.check) {
+    return { message: courseValidation.message };
+  }
+
+  const marks: number = Number(await inputFunction("Marks:"));
+  const marksValidation = validateMarks(marks);
+  if (!marksValidation.check) {
+    return { message: marksValidation.message };
+  }
 
   const ids: number[] = StudentModel.map((student: Students) => {
     return student.id;
@@ -36,7 +69,7 @@ export const addStudent = async () => {
 };
 
 export const viewAllStudents = async () => {
-  const allStudents: Students = StudentModel.map((students: Students) => {
+  const allStudents: Students[] = StudentModel.map((students: Students) => {
     return students;
   });
   return { message: "Student List:", studentList: allStudents };
@@ -44,6 +77,10 @@ export const viewAllStudents = async () => {
 
 export const findStudent = async () => {
   const studentId: number = Number(await inputFunction("Enter Student id:"));
+  const idValidation = validateId(studentId);
+  if (!idValidation.check) {
+    return { message: idValidation.message };
+  }
 
   const requiredStudent: Students = StudentModel.find((student: Students) => {
     return student.id === studentId;
@@ -61,6 +98,10 @@ export const findStudent = async () => {
 
 export const updateStudent = async () => {
   const studentId: number = Number(await inputFunction("Enter Student id:"));
+  const idValidation = validateId(studentId);
+  if (!idValidation.check) {
+    return { message: idValidation.message };
+  }
   const index: number = StudentModel.findIndex((student: Students) => {
     return student.id === studentId;
   });
@@ -80,19 +121,42 @@ export const updateStudent = async () => {
     );
     const choice: number = Number(await inputFunction("Choose a Number:"));
     if (choice === 1) {
-      name = await inputFunction("Name:");
+      name = await inputFunction(`Name(${name}):`);
+      const nameValidation = validateName(name);
+      if (!nameValidation.check) {
+        return { message: nameValidation.message };
+      }
     }
     if (choice === 2) {
-      email = await inputFunction("Email:");
+      email = await inputFunction(`Email(${email}):`);
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.check) {
+        return { message: emailValidation.message };
+      }
     }
     if (choice === 3) {
-      age = Number(await inputFunction("Age:"));
+      age = Number(await inputFunction(`Age(${age}):`));
+      const ageValidation = validateAge(age);
+      if (!ageValidation.check) {
+        return { message: ageValidation.message };
+      }
     }
     if (choice === 4) {
-      course = await inputFunction("Course Name:");
+      course = await inputFunction(
+        `Courses:\n1. OS, 2. OOP, 3. CN, 4. WEB, 5. DBMS, 6. DSA:\nChoose one of the Courses above.\nCourse Name:(${course}):`,
+      );
+      course = course.toUpperCase();
+      const courseValidation = validateCourse(course);
+      if (!courseValidation.check) {
+        return { message: courseValidation.message };
+      }
     }
     if (choice === 5) {
-      marks = Number(await inputFunction("Marks:"));
+      marks = Number(await inputFunction(`Marks(${marks}):`));
+      const marksValidation = validateMarks(marks);
+      if (!marksValidation.check) {
+        return { message: marksValidation.message };
+      }
     }
     if (choice === 6) break;
     if (choice < 1 || choice > 6) {
@@ -115,6 +179,11 @@ export const updateStudent = async () => {
 
 export const deleteStudent = async () => {
   const studentId = Number(await inputFunction("Enter Student id:"));
+  const idValidation = validateId(studentId);
+  if (!idValidation.check) {
+    return { message: idValidation.message };
+  }
+
   const index: number = StudentModel.findIndex((student: Students) => {
     return student.id === studentId;
   });
@@ -123,13 +192,14 @@ export const deleteStudent = async () => {
   }
 
   console.log(
-    `Would you like to Delete ${StudentModel[index]}?\n Type yes to comfirm.`,
+    `Would you like to Delete ${JSON.stringify(StudentModel[index])}?\n Type yes to comfirm.`,
   );
-  const choice: string = StudentModel[index].name;
+  const choice: string = await inputFunction("");
   if (choice.toLowerCase() === "yes") {
     StudentModel.splice(index, 1);
+    return { message: "Student deleted Successfully" };
   }
-  return { message: "Student deleted Successfully" };
+  return { message: "Student deletion Cancelled" };
 };
 
 export const searchStudent = async () => {
@@ -139,24 +209,43 @@ export const searchStudent = async () => {
   const choice: number = Number(await inputFunction("Choose a Number:"));
   if (choice === 1) {
     const name: string = await inputFunction("Name:");
-    const studentsData: Students = StudentModel.map((student: Students) => {
-      return student.name.toLowerCase === name;
-    });
+    const nameValidation = validateName(name);
+    if (!nameValidation.check) {
+      return { message: nameValidation.message };
+    }
+    const studentsData: Students[] = StudentModel.filter(
+      (student: Students) => {
+        return student.name.toLowerCase() === name.toLocaleLowerCase();
+      },
+    );
     return { message: `Students with name: ${name}`, students: studentsData };
   }
   if (choice === 2) {
     const email: string = await inputFunction("Email:");
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.check) {
+      return { message: emailValidation.message };
+    }
 
-    const studentsData: Students = StudentModel.map((student: Students) => {
-      return student.email.toLowerCase === email;
-    });
+    const studentsData: Students[] = StudentModel.filter(
+      (student: Students) => {
+        return student.email === email;
+      },
+    );
     return { message: `Students with email: ${email}`, students: studentsData };
   }
   if (choice === 3) {
-    const course: string = await inputFunction("Course Name:");
-    const studentsData: Students = StudentModel.map((student: Students) => {
-      return student.course.toLowerCase === course;
-    });
+    let course: string = await inputFunction("Course Name:");
+    course = course.toUpperCase();
+    const courseValidation = validateCourse(course);
+    if (!courseValidation.check) {
+      return { message: courseValidation.message };
+    }
+    const studentsData: Students[] = StudentModel.filter(
+      (student: Students) => {
+        return student.course === course;
+      },
+    );
     return {
       message: `Students with course: ${course}`,
       studentList: studentsData,
@@ -170,6 +259,11 @@ export const filterStudent = async () => {
   );
   let course: string = await inputFunction("Course Name:");
   course = course.toUpperCase();
+  const courseValidation = validateCourse(course);
+  if (!courseValidation.check) {
+    return { message: courseValidation.message };
+  }
+
   if (
     course !== "OS" &&
     course !== "OOP" &&
@@ -297,9 +391,19 @@ export const sortStudent = async () => {
 };
 
 export const saveToFile = async () => {
-  if (StudentModel === oldStudentModel) {
-    return { message: "There is no Changes to Save" };
-  } else {
-    return { message: "Changes saved" };
+  if (JSON.stringify(StudentModel) === JSON.stringify(oldStudentsData)) {
+    return {
+      message: "There are no changes to save",
+    };
   }
+
+  await fs.writeFile(
+    "src/database.json",
+    JSON.stringify(StudentModel, null, 2),
+    "utf-8",
+  );
+
+  return {
+    message: "Changes saved successfully",
+  };
 };

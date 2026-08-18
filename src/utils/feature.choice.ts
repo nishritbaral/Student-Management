@@ -32,61 +32,61 @@ export const featuresChoice = async () => {
         break;
 
       case 1: {
-        const output: string = await addStudent();
+        const output: { message: string } = await addStudent();
         console.log(output);
         break;
       }
 
       case 2: {
-        const output: string = await viewAllStudents();
+        const output: { message: string } = await viewAllStudents();
         console.log(output);
         break;
       }
 
       case 3: {
-        const output: string = await findStudent();
+        const output: { message: string } = await findStudent();
         console.log(output);
         break;
       }
 
       case 4: {
-        const output: string = await updateStudent();
+        const output: { message: string } = await updateStudent();
         console.log(output);
         break;
       }
 
       case 5: {
-        const output: string = await deleteStudent();
+        const output: { message: string }= await deleteStudent();
         console.log(output);
         break;
       }
 
       case 6: {
-        const output: string = await searchStudent();
+        const output: { message: string } = await searchStudent();
         console.log(output);
         break;
       }
 
       case 7: {
-        const output: string = await filterStudent();
+        const output: { message: string } = await filterStudent();
         console.log(output);
         break;
       }
 
       case 8: {
-        const output: string = await studentStatistics();
+        const output: { message: string } = await studentStatistics();
         console.log(output);
         break;
       }
 
       case 9: {
-        const output: string = await sortStudent();
+        const output: { message: string } = await sortStudent();
         console.log(output);
         break;
       }
 
       case 10: {
-        const output: string = await saveToFile();
+        const output: { message: string } = await saveToFile();
         console.log(output);
         break;
       }
